@@ -43,7 +43,7 @@ int main() {
     bot.handlers.insert(
             {
                     "READY",
-                    [&bot, &self](json data) {
+                    [&bot, &self](boost::asio::yield_context, json data) {
                         self = data["user"];
                         //std::cout << data.dump(4) << std::endl;
                     }
@@ -52,7 +52,7 @@ int main() {
     bot.handlers.insert(
             {
                     "MESSAGE_CREATE",
-                    [&bot, &self](json msg) {
+                    [&bot, &self](boost::asio::yield_context yield, json msg) {
                         //std::cout << msg.dump(4) << std::endl;
                         bool mentioned = false;
                         for(const json &mention : msg["mentions"]){
@@ -69,11 +69,12 @@ int main() {
                                 content = content.substr(0, content.find(mentioncode)) + content.substr(content.find(mentioncode) + mentioncode.size());
                             }
                             bot.call(
+                                    yield,
                                     "POST",
                                     "/channels/" + msg["channel_id"].get<std::string>() + "/messages",
                                     {{"content", content}}
                             );
-                            bot.send(3, {
+                            bot.send(yield, 3, {
                                     {"game", {
                                                      {"name", "with " + msg["author"]["username"].get<std::string>()},
                                                      {"type", 0}
@@ -86,9 +87,9 @@ int main() {
                     }
             }
     );
-    bot.handlers.insert({"GUILD_CREATE",   [](json){}}); // Ignoring
-    bot.handlers.insert({"PRESENCE_UPDATE",[](json){}}); // Ignoring
-    bot.handlers.insert({"TYPING_START",   [](json){}}); // Ignoring
+    bot.handlers.insert({"GUILD_CREATE",   [](boost::asio::yield_context, json){}}); // Ignoring
+    bot.handlers.insert({"PRESENCE_UPDATE",[](boost::asio::yield_context, json){}}); // Ignoring
+    bot.handlers.insert({"TYPING_START",   [](boost::asio::yield_context, json){}}); // Ignoring
 
     auto aioc = std::make_shared<asio::io_context>();
 
